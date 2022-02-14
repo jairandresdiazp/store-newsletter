@@ -1,6 +1,7 @@
 {
   "extends": "@vtex/tsconfig",
   "compilerOptions": {
+    "jsx": "react",
     "lib": ["es2017", "dom", "es2018.promise", "esnext.asynciterable"],
     "noEmitOnError": false,
     "types": ["node", "jest", "graphql"],

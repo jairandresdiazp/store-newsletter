@@ -7,7 +7,7 @@ import FormEmailInput from '../FormEmailInput'
 import FormNameInput from '../FormNameInput'
 import FormPhoneInput from '../FormPhoneInput'
 import FormSubmit from '../FormSubmit'
-import subscribeNewsletter from '../graphql/subscribeNewsletter.gql'
+import subscribeNewsletter from '../graphql/subscribeNewsletter.graphql'
 
 const mockedUsePixel = usePixel as jest.Mock<ReturnType<typeof usePixel>>
 
