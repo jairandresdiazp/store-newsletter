@@ -80,6 +80,36 @@ function generateMutationVariables({
    return variables
 }
 
+function generateMutationVariablesNative({
+  email,
+  name,
+  phone,
+  customFields,
+}: {
+  email: string
+  name: string | undefined | null
+  phone: string | undefined | null
+  customFields: CustomField[] | null
+}) {
+  const variables: any = { email, fields: {} }
+
+  if (name) {
+    variables.fields.name = name
+  }
+
+  if (phone) {
+    variables.fields.phone = phone
+  }
+
+  if (customFields) {
+    customFields.forEach((customField) => {
+      variables.fields[customField.name] = customField.value
+    })
+  }
+
+  return variables
+}
+
 function Newsletter(props: PropsWithChildren<Props>) {
   const {
     ErrorState,
@@ -95,6 +125,7 @@ function Newsletter(props: PropsWithChildren<Props>) {
     name,
     phone,
     submission,
+    subscribeCustom,
     subscribe,
     customFields,
   } = useNewsletterState()
@@ -191,10 +222,18 @@ function Newsletter(props: PropsWithChildren<Props>) {
       customFields,
     })
 
+    const mutationVariablesNative = generateMutationVariablesNative({
+      email,
+      name,
+      phone,
+      customFields,
+    })
+
     // The '.catch' here is to prevent 'unhandled promise rejection'.
     // Proper error handling for this is implemented by NewsletterContext
     // using the variables returned by the 'useMutation' call it performs.
-    subscribe({variables:mutationVariables}).catch(() => {})
+    subscribe({variables:mutationVariablesNative}).catch(() => {})
+    subscribeCustom({variables:mutationVariables}).catch(() => {})
   }
 
   return (
