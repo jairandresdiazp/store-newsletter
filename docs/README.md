@@ -52,6 +52,13 @@ Now, you are able to use all blocks exported by the `store-newsletter` app. Chec
 }
 ```
 
+3. create entity in master data 
+![image](https://user-images.githubusercontent.com/17678382/153961986-ac6815b3-f0ff-4505-8704-11ce1c4315b0.png)
+
+4. create from in master data 
+![image](https://user-images.githubusercontent.com/17678382/153962210-909220c8-0633-476a-9af3-6e236d4f91e8.png)
+![image](https://user-images.githubusercontent.com/17678382/153962290-b9fdde53-4b5e-48f3-84c8-0879b7f474a9.png)
+
 ### `newsletter-form` props
 
 | Prop name      | Type               | Description                                                                                                                                                                                                                                                         | Default value |
