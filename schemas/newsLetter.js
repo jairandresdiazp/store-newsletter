@@ -18,9 +18,17 @@ fetch('/api/dataentities/NL/schemas/newsLetterV1', {
         "format": "email",
         "pattern": "^\\S+@\\S+\\.\\S+$"
       },
-      "fields":{
+      "name": {
         "type": "string",
-        "title": "fields"
+        "title": "name"
+      },
+      "phone": {
+        "type": "string",
+        "title": "name"
+      },
+      "customFields":{
+        "type": "string",
+        "title": "customFields"
       },
     },
     "required": [

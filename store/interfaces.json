@@ -9,31 +9,31 @@
   "newsletter-input-email": {
     "component": "FormEmailInput",
     "content": {
-      "$ref": "app:vtex.store-newsletter#/definitions/EmailInput"
+      "$ref": "app:blacksipqa.store-newsletter#/definitions/EmailInput"
     }
   },
   "newsletter-input-name": {
     "component": "FormNameInput",
     "content": {
-      "$ref": "app:vtex.store-newsletter#/definitions/NameInput"
+      "$ref": "app:blacksipqa.store-newsletter#/definitions/NameInput"
     }
   },
   "newsletter-input-phone": {
     "component": "FormPhoneInput",
     "content": {
-      "$ref": "app:vtex.store-newsletter#/definitions/PhoneInput"
+      "$ref": "app:blacksipqa.store-newsletter#/definitions/PhoneInput"
     }
   },
   "newsletter-checkbox-confirmation": {
     "component": "FormConfirmationCheckbox",
     "content": {
-      "$ref": "app:vtex.store-newsletter#/definitions/ConfirmationCheckbox"
+      "$ref": "app:blacksipqa.store-newsletter#/definitions/ConfirmationCheckbox"
     }
   },
   "newsletter-submit": {
     "component": "FormSubmit",
     "content": {
-      "$ref": "app:vtex.store-newsletter#/definitions/NewsletterSubmit"
+      "$ref": "app:blacksipqa.store-newsletter#/definitions/NewsletterSubmit"
     }
   }
 }

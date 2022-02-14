@@ -8,11 +8,11 @@ import React, {
 } from 'react'
 import { MutationFunction, useMutation } from 'react-apollo'
 
-import subscribeNewsletterMutation from '../graphql/subscribeNewsletter.gql'
+import subscribeNewsletterMutation from '../graphql/createDocument.graphql'
 
 interface SubmissionState {
   error: undefined | ApolloError
-  data: { subscribeNewsletter: boolean } | undefined
+  data: any | undefined
   loading: boolean
 }
 
@@ -23,8 +23,8 @@ export interface MutationArguments {
     phone?: string
     bindingUrl?: string
     bindingId?: string
-    [key: string]: string | undefined | null
-  }
+  },
+  customFields?: string
 }
 
 interface CustomField {
@@ -42,10 +42,7 @@ export interface State {
   invalidName: boolean
   invalidPhone: boolean
   submission: SubmissionState
-  subscribe: MutationFunction<
-    { subscribeNewsletter: boolean },
-    MutationArguments
-  >
+  subscribe: MutationFunction
 }
 
 interface UpdateEmailAction {
@@ -172,10 +169,7 @@ function newsletterContextReducer(state: State, action: Action): State {
 }
 
 function NewsletterContextProvider(props: PropsWithChildren<{}>) {
-  const [subscribeToNewsletter, { data, loading, error }] = useMutation<
-    { subscribeNewsletter: boolean },
-    MutationArguments
-  >(subscribeNewsletterMutation)
+  const [subscribeToNewsletter, { data, loading, error }] = useMutation(subscribeNewsletterMutation)
 
   const [state, dispatch] = useReducer(newsletterContextReducer, {
     email: '',

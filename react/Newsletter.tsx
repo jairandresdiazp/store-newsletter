@@ -3,12 +3,12 @@ import { FormattedMessage } from 'react-intl'
 import { useCssHandles, CssHandlesTypes } from 'vtex.css-handles'
 import { usePixel } from 'vtex.pixel-manager'
 import type { PixelEventTypes } from 'vtex.pixel-manager'
+import { NEWS_LETTER_MASTER_DATA_ACRONYM, NEWS_LETTER_MASTER_DATA_SCHEMA } from './Const';
 
 import {
   NewsletterContextProvider,
   useNewsletterDispatch,
   useNewsletterState,
-  MutationArguments,
   State,
 } from './components/NewsletterContext'
 import {
@@ -53,23 +53,31 @@ function generateMutationVariables({
   phone: string | undefined | null
   customFields: CustomField[] | null
 }) {
-  const variables: MutationArguments = { email, fields: {} }
+  const variables = {acronym: NEWS_LETTER_MASTER_DATA_ACRONYM,
+  schema: NEWS_LETTER_MASTER_DATA_SCHEMA,
+                document: {
+                    fields: [
+                        {
+                            key: 'email',
+                            value: email,
+                        }
+                    ],
+                }
+              }
 
   if (name) {
-    variables.fields.name = name
+    variables.document.fields.push({key:'name',value:name});
   }
 
   if (phone) {
-    variables.fields.phone = phone
+    variables.document.fields.push({key:'phone',value:phone});
   }
 
   if (customFields) {
-    customFields.forEach((customField) => {
-      variables.fields[customField.name] = customField.value
-    })
+    variables.document.fields.push({key:'customFields',value:JSON.stringify(customFields)});
   }
 
-  return variables
+   return variables
 }
 
 function Newsletter(props: PropsWithChildren<Props>) {
@@ -109,7 +117,7 @@ function Newsletter(props: PropsWithChildren<Props>) {
     )
   }
 
-  if (submission.data?.subscribeNewsletter) {
+  if (submission.data?.createDocument?.documentId) {
     return SuccessState ? (
       <SuccessState subscribedUserData={{ email, name, phone }} />
     ) : (
@@ -186,7 +194,7 @@ function Newsletter(props: PropsWithChildren<Props>) {
     // The '.catch' here is to prevent 'unhandled promise rejection'.
     // Proper error handling for this is implemented by NewsletterContext
     // using the variables returned by the 'useMutation' call it performs.
-    subscribe({ variables: mutationVariables }).catch(() => {})
+    subscribe({variables:mutationVariables}).catch(() => {})
   }
 
   return (
