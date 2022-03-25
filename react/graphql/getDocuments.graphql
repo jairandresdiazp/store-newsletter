@@ -1,0 +1,19 @@
+query GetDocuments(
+    $acronym: String
+    $schema: String
+    $fields: [String]
+    $where: String
+) {
+    documents(
+        acronym: $acronym
+        schema: $schema
+        fields: $fields
+        where: $where
+    ) {
+        id
+        fields {
+            key
+            value
+        }
+    }
+}

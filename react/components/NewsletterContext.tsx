@@ -6,10 +6,11 @@ import React, {
   PropsWithChildren,
   useEffect,
 } from 'react'
-import { MutationFunction, useMutation } from 'react-apollo'
+import { MutationFunction, useLazyQuery, useMutation } from 'react-apollo'
 
 import subscribeNewsletterMutationCustom from '../graphql/createDocument.graphql'
-import subscribeNewsletterMutation from '../graphql/subscribeNewsletter.graphql'
+import subscribeNewsletterMutation from '../graphql/subscribeNewsletter.graphql';
+import getDocuments from '../graphql/getDocuments.graphql';
 
 interface SubmissionState {
   error: undefined | ApolloError
@@ -32,7 +33,6 @@ interface CustomField {
   name: string
   value: string | undefined | null
 }
-
 export interface State {
   email: string
   name: string | null
@@ -42,7 +42,9 @@ export interface State {
   invalidEmail: boolean
   invalidName: boolean
   invalidPhone: boolean
-  submission: SubmissionState
+  submission: SubmissionState,
+  validNewsLetter: SubmissionState,
+  validNewsLetterCustom: any,
   subscribe: MutationFunction,
   subscribeCustom: MutationFunction
 }
@@ -92,6 +94,11 @@ interface SetMutationValues {
   value: SubmissionState
 }
 
+interface SetQueryValues {
+  type: 'SET_QUERY_VALUES'
+  value: SubmissionState
+}
+
 type Action =
   | UpdateEmailAction
   | UpdateNameAction
@@ -102,6 +109,7 @@ type Action =
   | SetInvalidNameAction
   | SetInvalidPhoneAction
   | SetCustomValuesAction
+  | SetQueryValues
 type Dispatch = (action: Action) => void
 
 const NewsletterStateContext = createContext<State | undefined>(undefined)
@@ -165,15 +173,23 @@ function newsletterContextReducer(state: State, action: Action): State {
       }
     }
 
+    case 'SET_QUERY_VALUES': {
+      return {
+        ...state,
+        validNewsLetter: action.value,
+      }
+    }
+
     default:
       return state
   }
 }
 
 function NewsletterContextProvider(props: PropsWithChildren<{}>) {
+  const [validNewsletterCustom, { data: dataValidNewsletterCustom, loading: loadingValidNewsletterCustom, error: errorValidNewsletterCustom }] = useLazyQuery(getDocuments)
   const [subscribeToNewsletterCustom, { data, loading, error }] = useMutation(subscribeNewsletterMutationCustom)
   const [subscribeToNewsletter] = useMutation(subscribeNewsletterMutation)
-
+  
   const [state, dispatch] = useReducer(newsletterContextReducer, {
     email: '',
     name: null,
@@ -183,6 +199,7 @@ function NewsletterContextProvider(props: PropsWithChildren<{}>) {
     invalidEmail: false,
     invalidName: false,
     invalidPhone: false,
+    validNewsLetterCustom: validNewsletterCustom,
     subscribeCustom: subscribeToNewsletterCustom,
     subscribe: subscribeToNewsletter,
     submission: {
@@ -190,7 +207,13 @@ function NewsletterContextProvider(props: PropsWithChildren<{}>) {
       loading,
       error,
     },
+    validNewsLetter: {
+      data: undefined,
+      loading: true,
+      error: undefined
+    }
   })
+
 
   // Update mutation variables in State
   useEffect(() => {
@@ -199,6 +222,13 @@ function NewsletterContextProvider(props: PropsWithChildren<{}>) {
       value: { loading, error, data },
     })
   }, [error, loading, data])
+
+  useEffect(() => {
+    dispatch({
+      type: 'SET_QUERY_VALUES',
+      value: { loading: loadingValidNewsletterCustom, error: errorValidNewsletterCustom, data: dataValidNewsletterCustom },
+    })
+  }, [errorValidNewsletterCustom, loadingValidNewsletterCustom, dataValidNewsletterCustom])
 
   return (
     <NewsletterStateContext.Provider value={state}>

@@ -1,8 +1,8 @@
-import React, { ComponentType, PropsWithChildren, FormEvent } from 'react'
+import React, { ComponentType, PropsWithChildren, FormEvent, useMemo } from 'react'
 import { FormattedMessage } from 'react-intl'
 import { useCssHandles, CssHandlesTypes } from 'vtex.css-handles'
 import { usePixel } from 'vtex.pixel-manager'
-import type { PixelEventTypes } from 'vtex.pixel-manager'
+import type { PixelEventTypes } from 'vtex.pixel-manager';
 import { NEWS_LETTER_MASTER_DATA_ACRONYM, NEWS_LETTER_MASTER_DATA_SCHEMA } from './Const';
 
 import {
@@ -53,31 +53,32 @@ function generateMutationVariables({
   phone: string | undefined | null
   customFields: CustomField[] | null
 }) {
-  const variables = {acronym: NEWS_LETTER_MASTER_DATA_ACRONYM,
-  schema: NEWS_LETTER_MASTER_DATA_SCHEMA,
-                document: {
-                    fields: [
-                        {
-                            key: 'email',
-                            value: email,
-                        }
-                    ],
-                }
-              }
+  const variables = {
+    acronym: NEWS_LETTER_MASTER_DATA_ACRONYM,
+    schema: NEWS_LETTER_MASTER_DATA_SCHEMA,
+    document: {
+      fields: [
+        {
+          key: 'email',
+          value: email,
+        }
+      ],
+    }
+  }
 
   if (name) {
-    variables.document.fields.push({key:'name',value:name});
+    variables.document.fields.push({ key: 'name', value: name });
   }
 
   if (phone) {
-    variables.document.fields.push({key:'phone',value:phone});
+    variables.document.fields.push({ key: 'phone', value: phone });
   }
 
   if (customFields) {
-    variables.document.fields.push({key:'customFields',value:JSON.stringify(customFields)});
+    variables.document.fields.push({ key: 'customFields', value: JSON.stringify(customFields) });
   }
 
-   return variables
+  return variables
 }
 
 function generateMutationVariablesNative({
@@ -128,35 +129,13 @@ function Newsletter(props: PropsWithChildren<Props>) {
     subscribeCustom,
     subscribe,
     customFields,
+    validNewsLetterCustom,
+    validNewsLetter
   } = useNewsletterState()
 
   const dispatch = useNewsletterDispatch()
   const { push } = usePixel()
   const { handles } = useCssHandles(CSS_HANDLES, { classes })
-
-  if (submission.loading && LoadingState) {
-    return <LoadingState />
-  }
-
-  if (submission.error) {
-    return ErrorState ? (
-      <ErrorState />
-    ) : (
-      <p className={handles.defaultErrorMessage}>
-        <FormattedMessage id="store/newsletter-submit-error.default" />
-      </p>
-    )
-  }
-
-  if (submission.data?.createDocument?.documentId) {
-    return SuccessState ? (
-      <SuccessState subscribedUserData={{ email, name, phone }} />
-    ) : (
-      <p className={handles.defaultSuccessMessage}>
-        <FormattedMessage id="store/newsletter-submit-success.default" />
-      </p>
-    )
-  }
 
   function validateFormInputs() {
     const isEmailValid = validateEmail(email)
@@ -187,7 +166,21 @@ function Newsletter(props: PropsWithChildren<Props>) {
     return isNameValid && isPhoneValid && isEmailValid
   }
 
-  function handleSubmit(e: FormEvent) {
+  const mutationVariables = generateMutationVariables({
+    email,
+    name,
+    phone,
+    customFields,
+  })
+
+  const mutationVariablesNative = generateMutationVariablesNative({
+    email,
+    name,
+    phone,
+    customFields,
+  })
+
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault()
 
     const areUserInputsValid = validateFormInputs()
@@ -204,36 +197,69 @@ function Newsletter(props: PropsWithChildren<Props>) {
 
     const pixelEvent: PixelEventTypes.PixelData = customEventId
       ? {
-          id: customEventId,
-          event: 'newsletterSubscription',
-          data: pixelData,
-        }
+        id: customEventId,
+        event: 'newsletterSubscription',
+        data: pixelData,
+      }
       : {
-          event: 'newsletterSubscription',
-          data: pixelData,
-        }
+        event: 'newsletterSubscription',
+        data: pixelData,
+      }
 
     push(pixelEvent)
-
-    const mutationVariables = generateMutationVariables({
-      email,
-      name,
-      phone,
-      customFields,
-    })
-
-    const mutationVariablesNative = generateMutationVariablesNative({
-      email,
-      name,
-      phone,
-      customFields,
-    })
 
     // The '.catch' here is to prevent 'unhandled promise rejection'.
     // Proper error handling for this is implemented by NewsletterContext
     // using the variables returned by the 'useMutation' call it performs.
-    subscribe({variables:mutationVariablesNative}).catch(() => {})
-    subscribeCustom({variables:mutationVariables}).catch(() => {})
+    await subscribe({ variables: mutationVariablesNative }).catch(() => { })
+    await validNewsLetterCustom({
+      variables: {
+        acronym: NEWS_LETTER_MASTER_DATA_ACRONYM,
+        schema: NEWS_LETTER_MASTER_DATA_SCHEMA,
+        fields: ["email"],
+        where: `email=${email}`
+      }
+    })
+  }
+
+  useMemo(async () => {
+    if (validNewsLetter.data?.documents?.length <= 0) {
+      await subscribeCustom({ variables: mutationVariables }).catch(() => { });
+    }
+    if (validNewsLetter.data?.documents?.length > 0) {
+      dispatch({
+        type: 'SET_MUTATION_VALUES',
+        value: {
+          data: { createDocument: { documentId: 'default-id' } },
+          loading: false,
+          error: undefined
+        },
+      })
+    }
+  }, [validNewsLetter.data])
+
+  if (submission.loading && LoadingState) {
+    return <LoadingState />
+  }
+
+  if (submission.error) {
+    return ErrorState ? (
+      <ErrorState />
+    ) : (
+      <p className={handles.defaultErrorMessage}>
+        <FormattedMessage id="store/newsletter-submit-error.default" />
+      </p>
+    )
+  }
+
+  if (submission.data?.createDocument?.documentId) {
+    return SuccessState ? (
+      <SuccessState subscribedUserData={{ email, name, phone }} />
+    ) : (
+      <p className={handles.defaultSuccessMessage}>
+        <FormattedMessage id="store/newsletter-submit-success.default" />
+      </p>
+    )
   }
 
   return (
@@ -256,3 +282,4 @@ WrappedNewsletter.schema = {
 }
 
 export default WrappedNewsletter
+
